@@ -15,7 +15,6 @@
                 </div>
                 <div class="card-body p-4">
 
-                    <!-- Success Message -->
                     @if (TempData["SuccessMessage"] != null)
                     {
                         <div class="alert alert-success alert-dismissible fade show" role="alert">
@@ -24,7 +23,7 @@
                         </div>
                     }
 
-                    <form asp-action="Submit" method="post" id="claimForm">
+                    <form asp-action="Submit" method="post" enctype="multipart/form-data" id="claimForm">
                         @Html.AntiForgeryToken()
 
                         <div class="row">
@@ -63,11 +62,23 @@
                             </div>
                         </div>
 
-                        <div class="mb-4">
+                        <div class="mb-3">
                             <label asp-for="AdditionalNotes" class="form-label fw-semibold">Additional Notes</label>
                             <textarea asp-for="AdditionalNotes" class="form-control" rows="4"
                                       placeholder="Add any additional information about your claim (optional)"></textarea>
                             <span asp-validation-for="AdditionalNotes" class="text-danger small"></span>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label fw-semibold">Supporting Document</label>
+                            <div class="file-upload-area border rounded-2 p-3 text-center">
+                                <input type="file" name="supportingDocument" class="form-control"
+                                       accept=".pdf,.docx,.xlsx,.jpg,.png" />
+                                <small class="text-muted d-block mt-2">
+                                    Supported formats: PDF, DOCX, XLSX, JPG, PNG (Max 5MB)
+                                </small>
+                                <span class="text-danger small" id="fileValidation"></span>
+                            </div>
                         </div>
 
                         <div class="bg-light p-3 rounded-2 mb-4" id="calculationPreview">
@@ -106,7 +117,7 @@
 
 @section Scripts {
     <script>
-        // Real-time calculation 
+        // Real-time calculation preview
         function updateCalculationPreview() {
             const hours = parseFloat(document.getElementById('HoursWorked').value) || 0;
             const rate = parseFloat(document.getElementById('HourlyRate').value) || 0;
@@ -116,6 +127,30 @@
             document.getElementById('ratePreview').textContent = 'R ' + rate.toFixed(2);
             document.getElementById('totalPreview').textContent = 'R ' + total.toFixed(2);
         }
+
+        // File validation
+        document.querySelector('input[name="supportingDocument"]').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            const validationElement = document.getElementById('fileValidation');
+
+            if (file) {
+                const validTypes = ['application/pdf',
+                                  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                                  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                                  'image/jpeg', 'image/png'];
+                const maxSize = 5 * 1024 * 1024; 
+
+                if (!validTypes.includes(file.type)) {
+                    validationElement.textContent = 'Please select a valid file type (PDF, DOCX, XLSX, JPG, PNG).';
+                    e.target.value = '';
+                } else if (file.size > maxSize) {
+                    validationElement.textContent = 'File size must be less than 5MB.';
+                    e.target.value = '';
+                } else {
+                    validationElement.textContent = '';
+                }
+            }
+        });
 
         document.getElementById('HoursWorked').addEventListener('input', updateCalculationPreview);
         document.getElementById('HourlyRate').addEventListener('input', updateCalculationPreview);
