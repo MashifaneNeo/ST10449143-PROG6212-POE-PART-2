@@ -1,4 +1,6 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿// Models/Claim.cs
+using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 
 namespace PROG6212_ST10449143_POE_PART_1.Models
 {
@@ -13,11 +15,14 @@ namespace PROG6212_ST10449143_POE_PART_1.Models
         public string Month { get; set; }
 
         [Required]
+        [Range(0.5, 744)]
         public decimal HoursWorked { get; set; }
 
         [Required]
+        [Range(1, 10000)]
         public decimal HourlyRate { get; set; }
 
+        [JsonIgnore] 
         public decimal TotalAmount => HoursWorked * HourlyRate;
 
         public string AdditionalNotes { get; set; }
@@ -29,5 +34,13 @@ namespace PROG6212_ST10449143_POE_PART_1.Models
         public DateTime SubmittedDate { get; set; } = DateTime.Now;
 
         public string RejectionReason { get; set; }
+
+        public Claim()
+        {
+            Status ??= "Pending";
+            AdditionalNotes ??= string.Empty;
+            SupportingDocument ??= string.Empty;
+            RejectionReason ??= string.Empty;
+        }
     }
 }

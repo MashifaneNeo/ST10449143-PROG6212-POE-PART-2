@@ -1,0 +1,14 @@
+[
+  {
+    "Id": 1,
+    "LecturerName": "john madden",
+    "Month": "March",
+    "HoursWorked": 45.0,
+    "HourlyRate": 123.00,
+    "AdditionalNotes": "runn ",
+    "SupportingDocument": "5f8b1beb-997b-4889-ab8e-3b238a50421b.png",
+    "Status": "ApprovedByCoordinator",
+    "SubmittedDate": "2025-10-21T22:12:31.7998572+02:00",
+    "RejectionReason": null
+  }
+]

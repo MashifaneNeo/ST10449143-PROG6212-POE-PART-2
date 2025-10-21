@@ -32,10 +32,12 @@ namespace PROG_UI_MVC.Controllers
             {
                 string fileName = null;
 
+                // Handle file upload
                 if (supportingDocument != null && supportingDocument.Length > 0)
                 {
+                    // Validate file type and size
                     var allowedExtensions = new[] { ".pdf", ".docx", ".xlsx", ".jpg", ".png" };
-                    var maxFileSize = 5 * 1024 * 1024; 
+                    var maxFileSize = 5 * 1024 * 1024; // 5MB
 
                     var extension = Path.GetExtension(supportingDocument.FileName).ToLowerInvariant();
                     if (!allowedExtensions.Contains(extension))
@@ -50,33 +52,55 @@ namespace PROG_UI_MVC.Controllers
                         return View(model);
                     }
 
-                    var uploadsFolder = Path.Combine(_environment.WebRootPath, "uploads");
-                    if (!Directory.Exists(uploadsFolder))
-                        Directory.CreateDirectory(uploadsFolder);
-
-                    fileName = Guid.NewGuid().ToString() + extension;
-                    var filePath = Path.Combine(uploadsFolder, fileName);
-
-                    using (var stream = new FileStream(filePath, FileMode.Create))
+                    try
                     {
-                        await supportingDocument.CopyToAsync(stream);
+                        // Save file to wwwroot/uploads for web access
+                        var uploadsFolder = Path.Combine(_environment.WebRootPath, "uploads");
+                        if (!Directory.Exists(uploadsFolder))
+                            Directory.CreateDirectory(uploadsFolder);
+
+                        fileName = $"{Guid.NewGuid()}{extension}";
+                        var filePath = Path.Combine(uploadsFolder, fileName);
+
+                        using (var stream = new FileStream(filePath, FileMode.Create))
+                        {
+                            await supportingDocument.CopyToAsync(stream);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        // Log error and continue without file
+                        Console.WriteLine($"File upload error: {ex.Message}");
+                        fileName = null; // Don't fail the claim if file upload fails
                     }
                 }
 
-                var claim = new Claim
+                try
                 {
-                    LecturerName = model.LecturerName,
-                    Month = model.Month,
-                    HoursWorked = model.HoursWorked,
-                    HourlyRate = model.HourlyRate,
-                    AdditionalNotes = model.AdditionalNotes,
-                    SupportingDocument = fileName,
-                    Status = "Pending"
-                };
+                    // Create and save claim
+                    var claim = new Claim
+                    {
+                        LecturerName = model.LecturerName,
+                        Month = model.Month,
+                        HoursWorked = model.HoursWorked,
+                        HourlyRate = model.HourlyRate,
+                        AdditionalNotes = model.AdditionalNotes,
+                        SupportingDocument = fileName,
+                        Status = "Pending",
+                        SubmittedDate = DateTime.Now
+                    };
 
-                _claimService.AddClaim(claim);
-                TempData["SuccessMessage"] = "Claim submitted successfully!";
-                return RedirectToAction("Submit");
+                    _claimService.AddClaim(claim);
+                    TempData["SuccessMessage"] = "Claim submitted successfully!";
+                    return RedirectToAction("Submit");
+                }
+                catch (Exception ex)
+                {
+                    // Log the error
+                    Console.WriteLine($"Error saving claim: {ex.Message}");
+                    ModelState.AddModelError("", "An error occurred while saving your claim. Please try again.");
+                    return View(model);
+                }
             }
 
             return View(model);
