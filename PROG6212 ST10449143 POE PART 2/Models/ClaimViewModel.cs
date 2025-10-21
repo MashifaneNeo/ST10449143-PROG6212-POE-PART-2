@@ -24,7 +24,7 @@ namespace PROG6212_ST10449143_POE_PART_1.Models
         public decimal HourlyRate { get; set; }
 
         [Display(Name = "Additional Notes")]
-        public string AdditionalNotes { get; set; }
+        public string? AdditionalNotes { get; set; }
 
         public List<string> AvailableMonths => new List<string>
         {

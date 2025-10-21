@@ -25,8 +25,6 @@ namespace PROG_UI_MVC.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Submit(ClaimViewModel model, IFormFile supportingDocument)
         {
-            ModelState.Remove("AdditionalNotes");
-
             if (ModelState.IsValid)
             {
                 string fileName = null;
@@ -87,9 +85,9 @@ namespace PROG_UI_MVC.Controllers
                         Month = model.Month,
                         HoursWorked = model.HoursWorked,
                         HourlyRate = model.HourlyRate,
-                        AdditionalNotes = model.AdditionalNotes ?? string.Empty, // Ensure it's never null
+                        AdditionalNotes = model.AdditionalNotes,
                         SupportingDocument = fileName,
-                        Status = "Submitted"
+                        Status = "Submitted" 
                     };
 
                     _claimService.AddClaim(claim);
@@ -128,7 +126,7 @@ namespace PROG_UI_MVC.Controllers
         [HttpPost]
         public IActionResult Approve(int id, string role)
         {
-            var status = "Approved";
+            var status = "Approved"; 
             _claimService.UpdateClaimStatus(id, status);
 
             TempData["ApprovalMessage"] = "Claim approved successfully!";
@@ -142,7 +140,31 @@ namespace PROG_UI_MVC.Controllers
 
             TempData["ApprovalMessage"] = "Claim rejected successfully!";
             return RedirectToAction("Approvals");
-        }       
+        }
+
+        [HttpPost]
+        public IActionResult Delete(int id)
+        {
+            try
+            {
+                var result = _claimService.DeleteClaim(id);
+                if (result)
+                {
+                    TempData["SuccessMessage"] = "Claim deleted successfully!";
+                }
+                else
+                {
+                    TempData["ErrorMessage"] = "Error deleting claim. Claim not found.";
+                }
+            }
+            catch (Exception ex)
+            {
+                TempData["ErrorMessage"] = "An error occurred while deleting the claim.";
+                Console.WriteLine($"Delete error: {ex.Message}");
+            }
+            
+            return RedirectToAction("ViewClaims");
+        }
 
         public IActionResult TrackStatus()
         {

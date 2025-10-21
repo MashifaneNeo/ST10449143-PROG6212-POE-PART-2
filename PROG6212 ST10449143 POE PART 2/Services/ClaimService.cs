@@ -55,7 +55,7 @@ namespace PROG6212_ST10449143_POE_PART_1.Services
         {
             claim.Id = _nextId++;
             claim.SubmittedDate = DateTime.Now;
-            claim.Status = "Submitted"; // Set initial status
+            claim.Status = "Submitted";
             _claims.Add(claim);
             SaveClaims();
         }
@@ -84,6 +84,18 @@ namespace PROG6212_ST10449143_POE_PART_1.Services
         public List<Claim> GetPendingClaims()
         {
             return _claims.Where(c => c.Status == "Submitted" || c.Status == "Under Review").OrderByDescending(c => c.SubmittedDate).ToList();
+        }
+
+        public bool DeleteClaim(int id)
+        {
+            var claim = GetClaimById(id);
+            if (claim != null)
+            {
+                _claims.Remove(claim);
+                SaveClaims();
+                return true;
+            }
+            return false;
         }
     }
 }

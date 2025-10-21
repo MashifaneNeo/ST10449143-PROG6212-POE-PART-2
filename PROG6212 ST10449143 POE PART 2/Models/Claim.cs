@@ -28,7 +28,7 @@ namespace PROG6212_ST10449143_POE_PART_1.Models
 
         public string SupportingDocument { get; set; }
 
-        public string Status { get; set; } = "Submitted";
+        public string Status { get; set; } = "Submitted"; 
 
         public DateTime SubmittedDate { get; set; } = DateTime.Now;
 
