@@ -1,12 +1,32 @@
-﻿namespace PROG6212_ST10449143_POE_PART_1.Models
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace PROG6212_ST10449143_POE_PART_1.Models
 {
     public class ClaimViewModel
     {
+        [Required(ErrorMessage = "Lecturer name is required")]
+        [Display(Name = "Lecturer Name")]
+        [StringLength(100, ErrorMessage = "Name cannot exceed 100 characters")]
         public string LecturerName { get; set; }
+
+        [Required(ErrorMessage = "Please select a month")]
+        [Display(Name = "Month")]
         public string Month { get; set; }
+
+        [Required(ErrorMessage = "Hours worked is required")]
+        [Display(Name = "Hours Worked")]
+        [Range(0.5, 744, ErrorMessage = "Hours must be between 0.5 and 744")]
         public decimal HoursWorked { get; set; }
+
+        [Required(ErrorMessage = "Hourly rate is required")]
+        [Display(Name = "Hourly Rate")]
+        [Range(1, 10000, ErrorMessage = "Hourly rate must be between R1 and R10,000")]
         public decimal HourlyRate { get; set; }
+
+        [Display(Name = "Additional Notes")]
+        [StringLength(500, ErrorMessage = "Notes cannot exceed 500 characters")]
         public string AdditionalNotes { get; set; }
+
         public List<string> AvailableMonths => new List<string>
         {
             "January", "February", "March", "April", "May", "June",
