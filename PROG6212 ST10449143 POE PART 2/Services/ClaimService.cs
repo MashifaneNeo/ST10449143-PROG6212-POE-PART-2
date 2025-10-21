@@ -47,7 +47,6 @@ namespace PROG6212_ST10449143_POE_PART_1.Services
             }
             catch (Exception ex)
             {
-                // Log error (in a real app, use proper logging)
                 Console.WriteLine($"Error saving claims: {ex.Message}");
             }
         }
@@ -56,6 +55,7 @@ namespace PROG6212_ST10449143_POE_PART_1.Services
         {
             claim.Id = _nextId++;
             claim.SubmittedDate = DateTime.Now;
+            claim.Status = "Submitted"; // Set initial status
             _claims.Add(claim);
             SaveClaims();
         }
@@ -83,7 +83,7 @@ namespace PROG6212_ST10449143_POE_PART_1.Services
 
         public List<Claim> GetPendingClaims()
         {
-            return _claims.Where(c => c.Status == "Pending").OrderByDescending(c => c.SubmittedDate).ToList();
+            return _claims.Where(c => c.Status == "Submitted" || c.Status == "Under Review").OrderByDescending(c => c.SubmittedDate).ToList();
         }
     }
 }

@@ -20,71 +20,92 @@
         <div class="row">
             @foreach (var claim in Model)
             {
-                <div class="col-lg-6 mb-4">
+                <div class="col-lg-8 mb-4 mx-auto">
                     <div class="card border-0 shadow-sm">
                         <div class="card-header bg-light d-flex justify-content-between align-items-center">
                             <h6 class="mb-0">Claim #@claim.Id - @claim.Month</h6>
                             <span class="badge @GetStatusBadgeClass(claim.Status)">@claim.Status</span>
                         </div>
                         <div class="card-body">
-                            <div class="progress mb-4" style="height: 8px;">
-                                @foreach (var step in GetProgressSteps(claim.Status))
-                                {
-                                    <div class="progress-bar @step.Class" style="width: @step.Width%"
-                                         role="progressbar" aria-valuenow="@step.Width" aria-valuemin="0" aria-valuemax="100"></div>
-                                }
+                            <!-- Progress Bar -->
+                            <div class="progress mb-4" style="height: 10px;">
+                                <div class="progress-bar @GetProgressBarClass(claim.Status)"
+                                     style="width: @GetProgressPercentage(claim.Status)%"
+                                     role="progressbar"
+                                     aria-valuenow="@GetProgressPercentage(claim.Status)"
+                                     aria-valuemin="0"
+                                     aria-valuemax="100">
+                                </div>
                             </div>
 
+                            <!-- Progress Steps -->
                             <div class="row text-center mb-3">
-                                <div class="col-3">
+                                <div class="col-4">
                                     <div class="@GetStepIconClass("Submitted", claim.Status) rounded-circle d-inline-flex align-items-center justify-content-center mb-1"
-                                         style="width: 40px; height: 40px;">
-                                        <i class="fas fa-paper-plane"></i>
+                                         style="width: 50px; height: 50px;">
+                                        <i class="fas fa-paper-plane fs-5"></i>
                                     </div>
-                                    <small class="d-block">Submitted</small>
+                                    <small class="d-block fw-bold mt-1">Submitted</small>
+                                    <small class="text-muted">@claim.SubmittedDate.ToString("MMM dd")</small>
                                 </div>
-                                <div class="col-3">
+                                <div class="col-4">
                                     <div class="@GetStepIconClass("Under Review", claim.Status) rounded-circle d-inline-flex align-items-center justify-content-center mb-1"
-                                         style="width: 40px; height: 40px;">
-                                        <i class="fas fa-search"></i>
+                                         style="width: 50px; height: 50px;">
+                                        <i class="fas fa-search fs-5"></i>
                                     </div>
-                                    <small class="d-block">Under Review</small>
+                                    <small class="d-block fw-bold mt-1">Under Review</small>
+                                    <small class="text-muted">Coordinator</small>
                                 </div>
-                                <div class="col-3">
+                                <div class="col-4">
                                     <div class="@GetStepIconClass("Approved", claim.Status) rounded-circle d-inline-flex align-items-center justify-content-center mb-1"
-                                         style="width: 40px; height: 40px;">
-                                        <i class="fas fa-check"></i>
+                                         style="width: 50px; height: 50px;">
+                                        <i class="fas fa-check fs-5"></i>
                                     </div>
-                                    <small class="d-block">Approved</small>
-                                </div>
-                                <div class="col-3">
-                                    <div class="@GetStepIconClass("Completed", claim.Status) rounded-circle d-inline-flex align-items-center justify-content-center mb-1"
-                                         style="width: 40px; height: 40px;">
-                                        <i class="fas fa-flag"></i>
-                                    </div>
-                                    <small class="d-block">Completed</small>
+                                    <small class="d-block fw-bold mt-1">Approved</small>
+                                    <small class="text-muted">Final</small>
                                 </div>
                             </div>
 
-                            <div class="row small text-muted">
-                                <div class="col-6">
+                            <!-- Claim Details -->
+                            <div class="row small text-muted mt-4">
+                                <div class="col-md-6 mb-2">
                                     <strong>Lecturer:</strong> @claim.LecturerName
                                 </div>
-                                <div class="col-6">
+                                <div class="col-md-6 mb-2">
                                     <strong>Amount:</strong> R @claim.TotalAmount
                                 </div>
-                                <div class="col-6">
-                                    <strong>Submitted:</strong> @claim.SubmittedDate.ToString("MMM dd, yyyy")
+                                <div class="col-md-6 mb-2">
+                                    <strong>Hours Worked:</strong> @claim.HoursWorked
                                 </div>
-                                <div class="col-6">
-                                    <strong>Hours:</strong> @claim.HoursWorked
+                                <div class="col-md-6 mb-2">
+                                    <strong>Hourly Rate:</strong> R @claim.HourlyRate
                                 </div>
+                                @if (!string.IsNullOrEmpty(claim.AdditionalNotes))
+                                {
+                                    <div class="col-12 mb-2">
+                                        <strong>Notes:</strong> @claim.AdditionalNotes
+                                    </div>
+                                }
+                                @if (!string.IsNullOrEmpty(claim.SupportingDocument))
+                                {
+                                    <div class="col-12 mb-2">
+                                        <strong>Document:</strong>
+                                        <span class="text-primary">
+                                            <i class="fas fa-file me-1"></i>
+                                            @{
+                                                var fileParts = claim.SupportingDocument.Split('|');
+                                                var displayName = fileParts.Length > 1 ? fileParts[1] : "Attached Document";
+                                            }
+                                            @displayName
+                                        </span>
+                                    </div>
+                                }
                             </div>
 
                             @if (claim.Status == "Rejected" && !string.IsNullOrEmpty(claim.RejectionReason))
                             {
                                 <div class="alert alert-danger mt-3 mb-0">
-                                    <strong>Rejection Reason:</strong> @claim.RejectionReason
+                                    <strong><i class="fas fa-exclamation-triangle me-1"></i>Rejection Reason:</strong> @claim.RejectionReason
                                 </div>
                             }
                         </div>
@@ -100,11 +121,35 @@
     {
         return status switch
         {
-            "Pending" => "bg-warning",
-            "ApprovedByCoordinator" => "bg-info",
-            "ApprovedByManager" => "bg-success",
+            "Submitted" => "bg-secondary",
+            "Under Review" => "bg-warning",
+            "Approved" => "bg-success",
             "Rejected" => "bg-danger",
             _ => "bg-secondary"
+        };
+    }
+
+    private string GetProgressBarClass(string status)
+    {
+        return status switch
+        {
+            "Rejected" => "bg-danger",
+            "Approved" => "bg-success",
+            "Under Review" => "bg-warning",
+            "Submitted" => "bg-info",
+            _ => "bg-secondary"
+        };
+    }
+
+    private int GetProgressPercentage(string status)
+    {
+        return status switch
+        {
+            "Submitted" => 33,
+            "Under Review" => 66,
+            "Approved" => 100,
+            "Rejected" => 100,
+            _ => 0
         };
     }
 
@@ -112,55 +157,26 @@
     {
         var stepOrder = new Dictionary<string, int>
         {
-            { "Submitted", 1 },
-            { "Under Review", 2 },
-            { "Approved", 3 },
-            { "Completed", 4 }
+            ["Submitted"] = 1,
+            ["Under Review"] = 2,
+            ["Approved"] = 3
         };
 
         var statusOrder = new Dictionary<string, int>
         {
-            { "Pending", 1 },
-            { "ApprovedByCoordinator", 2 },
-            { "ApprovedByManager", 3 },
-            { "Rejected", 5 } 
+            ["Submitted"] = 1,
+            ["Under Review"] = 2,
+            ["Approved"] = 3,
+            ["Rejected"] = 4
         };
 
         var currentStep = statusOrder.ContainsKey(claimStatus) ? statusOrder[claimStatus] : 0;
         var stepIndex = stepOrder[step];
 
-        if (claimStatus == "Rejected") return "bg-danger text-white";
-        if (stepIndex <= currentStep) return "bg-success text-white";
-        return "bg-light text-muted";
-    }
-
-    private List<ProgressStep> GetProgressSteps(string status)
-    {
-        var progress = status switch
-        {
-            "Pending" => 25,
-            "ApprovedByCoordinator" => 50,
-            "ApprovedByManager" => 100,
-            "Rejected" => 100,
-            _ => 0
-        };
-
-        var steps = new List<ProgressStep>
-        {
-            new ProgressStep { Width = progress, Class = status == "Rejected" ? "bg-danger" : "bg-success" }
-        };
-
-        if (progress < 100)
-        {
-            steps.Add(new ProgressStep { Width = 100 - progress, Class = "bg-light" });
-        }
-
-        return steps;
-    }
-
-    private class ProgressStep
-    {
-        public decimal Width { get; set; }
-        public string Class { get; set; }
+        if (claimStatus == "Rejected" && stepIndex >= 2)
+            return "bg-danger text-white";
+        if (stepIndex <= currentStep)
+            return "bg-success text-white";
+        return "bg-light text-muted border";
     }
 }

@@ -23,6 +23,18 @@
                         </div>
                     }
 
+                    @if (!ViewData.ModelState.IsValid)
+                    {
+                        <div class="alert alert-danger">
+                            <ul class="mb-0">
+                                @foreach (var error in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+                                {
+                                    <li>@error.ErrorMessage</li>
+                                }
+                            </ul>
+                        </div>
+                    }
+
                     <form asp-action="Submit" method="post" enctype="multipart/form-data" id="claimForm">
                         @Html.AntiForgeryToken()
 
@@ -46,7 +58,7 @@
                             <div class="col-md-6 mb-3">
                                 <label asp-for="HoursWorked" class="form-label fw-semibold">Hours Worked *</label>
                                 <div class="input-group">
-                                    <input asp-for="HoursWorked" class="form-control" placeholder="0.0" min="0" step="0.5" />
+                                    <input asp-for="HoursWorked" class="form-control" placeholder="0.0" min="0" step="0.5" value="0.0" />
                                     <span class="input-group-text">hours</span>
                                 </div>
                                 <span asp-validation-for="HoursWorked" class="text-danger small"></span>
@@ -56,24 +68,31 @@
                                 <label asp-for="HourlyRate" class="form-label fw-semibold">Hourly Rate *</label>
                                 <div class="input-group">
                                     <span class="input-group-text">R</span>
-                                    <input asp-for="HourlyRate" class="form-control" placeholder="0.00" min="0" step="0.01" />
+                                    <input asp-for="HourlyRate" class="form-control" placeholder="0.00" min="0" step="0.01" value="0.00" />
                                 </div>
                                 <span asp-validation-for="HourlyRate" class="text-danger small"></span>
                             </div>
                         </div>
 
                         <div class="mb-3">
-                            <label asp-for="AdditionalNotes" class="form-label fw-semibold">Additional Notes</label>
+                            <label asp-for="AdditionalNotes" class="form-label fw-semibold">Additional Notes (Optional)</label>
                             <textarea asp-for="AdditionalNotes" class="form-control" rows="4"
                                       placeholder="Add any additional information about your claim (optional)"></textarea>
-                            <span asp-validation-for="AdditionalNotes" class="text-danger small"></span>
                         </div>
 
                         <div class="mb-4">
-                            <label class="form-label fw-semibold">Supporting Document</label>
-                            <div class="file-upload-area border rounded-2 p-3 text-center">
-                                <input type="file" name="supportingDocument" class="form-control"
-                                       accept=".pdf,.docx,.xlsx,.jpg,.png" />
+                            <label class="form-label fw-semibold">Supporting Document (Optional)</label>
+                            <div class="file-upload-area border rounded-2 p-4 text-center">
+                                <div class="mb-3">
+                                    <i class="fas fa-cloud-upload-alt fa-2x text-muted mb-2"></i>
+                                    <p class="text-muted mb-2">Click to upload supporting documents</p>
+                                </div>
+                                <input type="file" name="supportingDocument" class="form-control d-none"
+                                       id="fileInput" accept=".pdf,.docx,.xlsx,.jpg,.png,.jpeg" />
+                                <button type="button" class="btn btn-outline-primary" onclick="document.getElementById('fileInput').click()">
+                                    <i class="fas fa-folder-open me-2"></i>Choose File
+                                </button>
+                                <div id="fileName" class="mt-2 text-muted small"></div>
                                 <small class="text-muted d-block mt-2">
                                     Supported formats: PDF, DOCX, XLSX, JPG, PNG (Max 5MB)
                                 </small>
@@ -86,7 +105,7 @@
                             <div class="row text-center">
                                 <div class="col-md-4">
                                     <small class="text-muted">Hours</small>
-                                    <div class="fw-bold fs-5" id="hoursPreview">0</div>
+                                    <div class="fw-bold fs-5" id="hoursPreview">0.0</div>
                                 </div>
                                 <div class="col-md-4">
                                     <small class="text-muted">Rate</small>
@@ -99,7 +118,6 @@
                             </div>
                         </div>
 
-                        <!-- Submit Button -->
                         <div class="d-grid gap-2 d-md-flex justify-content-md-end">
                             <button type="reset" class="btn btn-outline-secondary me-md-2">
                                 <i class="fas fa-redo me-1"></i>Clear Form
@@ -117,7 +135,38 @@
 
 @section Scripts {
     <script>
-        // Real-time calculation preview
+        document.getElementById('fileInput').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            const fileNameElement = document.getElementById('fileName');
+            const validationElement = document.getElementById('fileValidation');
+
+            if (file) {
+                fileNameElement.innerHTML = `<i class="fas fa-file me-1"></i><strong>Selected:</strong> ${file.name}`;
+                fileNameElement.className = 'mt-2 text-success small';
+
+                const validTypes = ['application/pdf',
+                                  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                                  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                                  'image/jpeg', 'image/png'];
+                const maxSize = 5 * 1024 * 1024;
+
+                if (!validTypes.includes(file.type)) {
+                    validationElement.textContent = 'Please select a valid file type (PDF, DOCX, XLSX, JPG, PNG).';
+                    e.target.value = '';
+                    fileNameElement.className = 'mt-2 text-danger small';
+                } else if (file.size > maxSize) {
+                    validationElement.textContent = 'File size must be less than 5MB.';
+                    e.target.value = '';
+                    fileNameElement.className = 'mt-2 text-danger small';
+                } else {
+                    validationElement.textContent = '';
+                }
+            } else {
+                fileNameElement.innerHTML = 'No file selected';
+                fileNameElement.className = 'mt-2 text-muted small';
+            }
+        });
+
         function updateCalculationPreview() {
             const hours = parseFloat(document.getElementById('HoursWorked').value) || 0;
             const rate = parseFloat(document.getElementById('HourlyRate').value) || 0;
@@ -128,33 +177,13 @@
             document.getElementById('totalPreview').textContent = 'R ' + total.toFixed(2);
         }
 
-        // File validation
-        document.querySelector('input[name="supportingDocument"]').addEventListener('change', function(e) {
-            const file = e.target.files[0];
-            const validationElement = document.getElementById('fileValidation');
-
-            if (file) {
-                const validTypes = ['application/pdf',
-                                  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-                                  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-                                  'image/jpeg', 'image/png'];
-                const maxSize = 5 * 1024 * 1024; 
-
-                if (!validTypes.includes(file.type)) {
-                    validationElement.textContent = 'Please select a valid file type (PDF, DOCX, XLSX, JPG, PNG).';
-                    e.target.value = '';
-                } else if (file.size > maxSize) {
-                    validationElement.textContent = 'File size must be less than 5MB.';
-                    e.target.value = '';
-                } else {
-                    validationElement.textContent = '';
-                }
-            }
-        });
-
         document.getElementById('HoursWorked').addEventListener('input', updateCalculationPreview);
         document.getElementById('HourlyRate').addEventListener('input', updateCalculationPreview);
 
-        document.addEventListener('DOMContentLoaded', updateCalculationPreview);
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('HoursWorked').value = '0.0';
+            document.getElementById('HourlyRate').value = '0.00';
+            updateCalculationPreview();
+        });
     </script>
 }

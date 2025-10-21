@@ -1,5 +1,4 @@
-﻿// Models/Claim.cs
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
 
 namespace PROG6212_ST10449143_POE_PART_1.Models
@@ -22,14 +21,14 @@ namespace PROG6212_ST10449143_POE_PART_1.Models
         [Range(1, 10000)]
         public decimal HourlyRate { get; set; }
 
-        [JsonIgnore] 
+        [JsonIgnore]
         public decimal TotalAmount => HoursWorked * HourlyRate;
 
         public string AdditionalNotes { get; set; }
 
         public string SupportingDocument { get; set; }
 
-        public string Status { get; set; } = "Pending";
+        public string Status { get; set; } = "Submitted";
 
         public DateTime SubmittedDate { get; set; } = DateTime.Now;
 
@@ -37,7 +36,7 @@ namespace PROG6212_ST10449143_POE_PART_1.Models
 
         public Claim()
         {
-            Status ??= "Pending";
+            Status ??= "Submitted";
             AdditionalNotes ??= string.Empty;
             SupportingDocument ??= string.Empty;
             RejectionReason ??= string.Empty;

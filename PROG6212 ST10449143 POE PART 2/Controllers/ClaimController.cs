@@ -1,5 +1,4 @@
-﻿// ClaimsController.cs
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using PROG6212_ST10449143_POE_PART_1.Models;
 using PROG6212_ST10449143_POE_PART_1.Services;
 
@@ -16,46 +15,49 @@ namespace PROG_UI_MVC.Controllers
             _environment = environment;
         }
 
-        // GET: Submit Claim
         public IActionResult Submit()
         {
             var model = new ClaimViewModel();
             return View(model);
         }
 
-        // POST: Submit Claim with file upload
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Submit(ClaimViewModel model, IFormFile supportingDocument)
         {
+            ModelState.Remove("AdditionalNotes");
+
             if (ModelState.IsValid)
             {
                 string fileName = null;
 
-                // Handle file upload
                 if (supportingDocument != null && supportingDocument.Length > 0)
                 {
-                    // Validate file type and size
-                    var allowedExtensions = new[] { ".pdf", ".docx", ".xlsx", ".jpg", ".png" };
-                    var maxFileSize = 5 * 1024 * 1024; // 5MB
+                    var allowedExtensions = new[] { ".pdf", ".docx", ".xlsx", ".jpg", ".png", ".jpeg" };
+                    var maxFileSize = 5 * 1024 * 1024;
 
                     var extension = Path.GetExtension(supportingDocument.FileName).ToLowerInvariant();
                     if (!allowedExtensions.Contains(extension))
                     {
-                        ModelState.AddModelError("supportingDocument", "Only PDF, DOCX, XLSX, JPG, PNG files are allowed.");
+                        ModelState.AddModelError("", "Only PDF, DOCX, XLSX, JPG, PNG files are allowed.");
                         return View(model);
                     }
 
                     if (supportingDocument.Length > maxFileSize)
                     {
-                        ModelState.AddModelError("supportingDocument", "File size must be less than 5MB.");
+                        ModelState.AddModelError("", "File size must be less than 5MB.");
                         return View(model);
                     }
 
                     try
                     {
-                        // Save file to wwwroot/uploads for web access
-                        var uploadsFolder = Path.Combine(_environment.WebRootPath, "uploads");
+                        var wwwrootPath = _environment.WebRootPath;
+                        if (string.IsNullOrEmpty(wwwrootPath))
+                        {
+                            wwwrootPath = Path.Combine(_environment.ContentRootPath, "wwwroot");
+                        }
+
+                        var uploadsFolder = Path.Combine(wwwrootPath, "uploads");
                         if (!Directory.Exists(uploadsFolder))
                             Directory.CreateDirectory(uploadsFolder);
 
@@ -66,28 +68,28 @@ namespace PROG_UI_MVC.Controllers
                         {
                             await supportingDocument.CopyToAsync(stream);
                         }
+
+                        fileName = $"{fileName}|{supportingDocument.FileName}";
                     }
                     catch (Exception ex)
                     {
-                        // Log error and continue without file
                         Console.WriteLine($"File upload error: {ex.Message}");
-                        fileName = null; // Don't fail the claim if file upload fails
+                        ModelState.AddModelError("", "Error uploading file. Please try again.");
+                        return View(model);
                     }
                 }
 
                 try
                 {
-                    // Create and save claim
                     var claim = new Claim
                     {
                         LecturerName = model.LecturerName,
                         Month = model.Month,
                         HoursWorked = model.HoursWorked,
                         HourlyRate = model.HourlyRate,
-                        AdditionalNotes = model.AdditionalNotes,
+                        AdditionalNotes = model.AdditionalNotes ?? string.Empty, // Ensure it's never null
                         SupportingDocument = fileName,
-                        Status = "Pending",
-                        SubmittedDate = DateTime.Now
+                        Status = "Submitted"
                     };
 
                     _claimService.AddClaim(claim);
@@ -96,7 +98,6 @@ namespace PROG_UI_MVC.Controllers
                 }
                 catch (Exception ex)
                 {
-                    // Log the error
                     Console.WriteLine($"Error saving claim: {ex.Message}");
                     ModelState.AddModelError("", "An error occurred while saving your claim. Please try again.");
                     return View(model);
@@ -115,16 +116,22 @@ namespace PROG_UI_MVC.Controllers
         public IActionResult Approvals()
         {
             var pendingClaims = _claimService.GetPendingClaims();
-            return View(pendingClaims);
+            foreach (var claim in pendingClaims.Where(c => c.Status == "Submitted"))
+            {
+                _claimService.UpdateClaimStatus(claim.Id, "Under Review");
+            }
+
+            var updatedClaims = _claimService.GetPendingClaims();
+            return View(updatedClaims);
         }
 
         [HttpPost]
         public IActionResult Approve(int id, string role)
         {
-            var status = role == "coordinator" ? "ApprovedByCoordinator" : "ApprovedByManager";
+            var status = "Approved";
             _claimService.UpdateClaimStatus(id, status);
 
-            TempData["ApprovalMessage"] = $"Claim {status.Replace("By", " by ")} successfully!";
+            TempData["ApprovalMessage"] = "Claim approved successfully!";
             return RedirectToAction("Approvals");
         }
 
@@ -135,12 +142,7 @@ namespace PROG_UI_MVC.Controllers
 
             TempData["ApprovalMessage"] = "Claim rejected successfully!";
             return RedirectToAction("Approvals");
-        }
-
-        public IActionResult UploadDocs()
-        {
-            return View();
-        }
+        }       
 
         public IActionResult TrackStatus()
         {

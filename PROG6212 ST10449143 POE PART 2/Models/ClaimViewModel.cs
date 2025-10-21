@@ -24,7 +24,6 @@ namespace PROG6212_ST10449143_POE_PART_1.Models
         public decimal HourlyRate { get; set; }
 
         [Display(Name = "Additional Notes")]
-        [StringLength(500, ErrorMessage = "Notes cannot exceed 500 characters")]
         public string AdditionalNotes { get; set; }
 
         public List<string> AvailableMonths => new List<string>
