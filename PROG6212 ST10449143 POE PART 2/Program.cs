@@ -1,3 +1,6 @@
+// Program.cs
+using PROG6212_ST10449143_POE_PART_1.Services;
+
 namespace PROG6212_ST10449143_POE_PART_1
 {
     public class Program
@@ -6,12 +9,12 @@ namespace PROG6212_ST10449143_POE_PART_1
         {
             var builder = WebApplication.CreateBuilder(args);
 
-            
+            // Add services to the container.
             builder.Services.AddControllersWithViews();
+            builder.Services.AddSingleton<IClaimService, ClaimService>();
 
             var app = builder.Build();
 
-           
             if (!app.Environment.IsDevelopment())
             {
                 app.UseExceptionHandler("/Home/Error");
@@ -19,15 +22,13 @@ namespace PROG6212_ST10449143_POE_PART_1
             }
 
             app.UseHttpsRedirection();
+            app.UseStaticFiles();
             app.UseRouting();
-
             app.UseAuthorization();
 
-            app.MapStaticAssets();
             app.MapControllerRoute(
                 name: "default",
-                pattern: "{controller=Home}/{action=Index}/{id?}")
-                .WithStaticAssets();
+                pattern: "{controller=Home}/{action=Index}/{id?}");
 
             app.Run();
         }
