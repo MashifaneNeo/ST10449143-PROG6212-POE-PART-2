@@ -31,6 +31,7 @@ namespace PROG6212_ST10449143_POE_PART_1.Models
         public decimal TotalAmount => HoursWorked * HourlyRate;
 
         [Column(TypeName = "nvarchar(500)")]
+        [StringLength(500, ErrorMessage = "Additional notes cannot exceed 500 characters")]
         public string AdditionalNotes { get; set; }
 
         [Column(TypeName = "nvarchar(500)")]

@@ -14,7 +14,7 @@ namespace PROG6212_ST10449143_POE_PART_1.Models
         {
             base.OnModelCreating(modelBuilder);
 
-            // Configure the Claim entity
+            // Configured Claim entity
             modelBuilder.Entity<Claim>(entity =>
             {
                 entity.HasKey(e => e.Id);

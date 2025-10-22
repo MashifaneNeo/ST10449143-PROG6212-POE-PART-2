@@ -52,7 +52,6 @@
                             </div>
                         </div>
                         <div class="card-body">
-                            <!-- Progress Bar -->
                             <div class="progress mb-4" style="height: 10px;">
                                 <div class="progress-bar @GetProgressBarClass(claim.Status)"
                                      style="width: @GetProgressPercentage(claim.Status)%"
@@ -63,7 +62,6 @@
                                 </div>
                             </div>
 
-                            <!-- Progress Steps -->
                             <div class="row text-center mb-3">
                                 <div class="col-4">
                                     <div class="@GetStepIconClass("Submitted", claim.Status) rounded-circle d-inline-flex align-items-center justify-content-center mb-1"
@@ -91,7 +89,6 @@
                                 </div>
                             </div>
 
-                            <!-- Claim Details -->
                             <div class="row small text-muted mt-4">
                                 <div class="col-md-6 mb-2">
                                     <strong>Lecturer:</strong> @claim.LecturerName

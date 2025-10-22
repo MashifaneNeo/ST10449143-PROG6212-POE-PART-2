@@ -172,7 +172,6 @@ namespace PROG6212_ST10449143_POE_PART_1.Controllers
 
                 Console.WriteLine($"Found claim: {claim.LecturerName}, Current status: {claim.Status}");
 
-                // Use the service to update the status to Approved
                 await _claimService.UpdateClaimStatusAsync(id, "Approved");
 
                 Console.WriteLine($"Claim {id} approved successfully");
@@ -195,7 +194,6 @@ namespace PROG6212_ST10449143_POE_PART_1.Controllers
             {
                 Console.WriteLine($"=== REJECT ACTION CALLED for claim {id} ===");
 
-                // Verify claim exists first
                 var claim = await _claimService.GetClaimByIdAsync(id);
                 if (claim == null)
                 {

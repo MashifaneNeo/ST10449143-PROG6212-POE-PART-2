@@ -186,20 +186,20 @@
 
         // Clear form functionality
         document.getElementById('clearFormBtn').addEventListener('click', function() {
-            // Reset form fields
+            
             document.getElementById('LecturerName').value = '';
             document.getElementById('Month').value = '';
             document.getElementById('HoursWorked').value = '0.0';
             document.getElementById('HourlyRate').value = '0.00';
             document.getElementById('AdditionalNotes').value = '';
 
-            // Reset file input
+            
             document.getElementById('fileInput').value = '';
             document.getElementById('fileName').innerHTML = 'No file selected';
             document.getElementById('fileName').className = 'mt-2 text-muted small';
             document.getElementById('fileValidation').textContent = '';
 
-            // Reset calculation preview
+            
             updateCalculationPreview();
 
             // Clear any validation messages
@@ -211,9 +211,9 @@
             alerts.forEach(alert => alert.remove());
         });
 
-        // Initialize calculation preview on page load
+        
         document.addEventListener('DOMContentLoaded', function() {
-            // Only set default values if the form is empty (not after a failed submission)
+            
             const lecturerName = document.getElementById('LecturerName').value;
             if (!lecturerName) {
                 document.getElementById('HoursWorked').value = '0.0';
