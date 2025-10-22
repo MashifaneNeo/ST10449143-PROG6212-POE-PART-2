@@ -58,9 +58,9 @@
                                     <td>@claim.Id</td>
                                     <td>@claim.LecturerName</td>
                                     <td>@claim.Month</td>
-                                    <td>@claim.HoursWorked</td>
-                                    <td>R @claim.HourlyRate</td>
-                                    <td class="fw-bold text-success">R @claim.TotalAmount</td>
+                                    <td>@claim.HoursWorked.ToString("0.00")</td>
+                                    <td>R @claim.HourlyRate.ToString("0.00")</td>
+                                    <td class="fw-bold text-success">R @claim.TotalAmount.ToString("0.00")</td>
                                     <td>
                                         <span class="badge @GetStatusBadgeClass(claim.Status)">
                                             @claim.Status

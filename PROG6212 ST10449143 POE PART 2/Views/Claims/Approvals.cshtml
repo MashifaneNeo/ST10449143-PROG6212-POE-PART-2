@@ -60,15 +60,15 @@
                             </div>
                             <div class="row mb-2">
                                 <div class="col-6"><strong>Hours:</strong></div>
-                                <div class="col-6">@claim.HoursWorked</div>
+                                <div class="col-6">@claim.HoursWorked.ToString("0.00")</div>
                             </div>
                             <div class="row mb-2">
                                 <div class="col-6"><strong>Rate:</strong></div>
-                                <div class="col-6">R @claim.HourlyRate</div>
+                                <div class="col-6">R @claim.HourlyRate.ToString("0.00")</div>
                             </div>
                             <div class="row mb-2">
                                 <div class="col-6"><strong>Total:</strong></div>
-                                <div class="col-6 text-success fw-bold">R @claim.TotalAmount</div>
+                                <div class="col-6 text-success fw-bold">R @claim.TotalAmount.ToString("0.00")</div>
                             </div>
                             @if (!string.IsNullOrEmpty(claim.AdditionalNotes))
                             {

@@ -97,13 +97,13 @@
                                     <strong>Lecturer:</strong> @claim.LecturerName
                                 </div>
                                 <div class="col-md-6 mb-2">
-                                    <strong>Amount:</strong> R @claim.TotalAmount
+                                    <strong>Amount:</strong> R @claim.TotalAmount.ToString("0.00")
                                 </div>
                                 <div class="col-md-6 mb-2">
-                                    <strong>Hours Worked:</strong> @claim.HoursWorked
+                                    <strong>Hours Worked:</strong> @claim.HoursWorked.ToString("0.00")
                                 </div>
                                 <div class="col-md-6 mb-2">
-                                    <strong>Hourly Rate:</strong> R @claim.HourlyRate
+                                    <strong>Hourly Rate:</strong> R @claim.HourlyRate.ToString("0.00")
                                 </div>
                                 @if (!string.IsNullOrEmpty(claim.AdditionalNotes))
                                 {
