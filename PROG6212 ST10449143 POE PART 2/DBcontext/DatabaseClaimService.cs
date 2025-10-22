@@ -65,14 +65,7 @@ namespace PROG6212_ST10449143_POE_PART_1.Services
                 if (claim != null)
                 {
                     claim.Status = status;
-                    claim.RejectionReason = rejectionReason ?? string.Empty; // Ensure not null
-
-                    // If approving, you might want to set additional properties
-                    if (status == "Approved")
-                    {
-                        // Add any approval-specific logic here
-                        Console.WriteLine($"Claim {id} approved at {DateTime.Now}");
-                    }
+                    claim.RejectionReason = rejectionReason ?? string.Empty;
 
                     await _context.SaveChangesAsync();
                     Console.WriteLine($"Claim {id} status updated to {status}");
@@ -101,7 +94,7 @@ namespace PROG6212_ST10449143_POE_PART_1.Services
             try
             {
                 return await _context.Claims
-                    .Where(c => c.Status == "Submitted" || c.Status == "Under Review")
+                    .Where(c => c.Status == "Under Review")
                     .OrderByDescending(c => c.SubmittedDate)
                     .ToListAsync();
             }

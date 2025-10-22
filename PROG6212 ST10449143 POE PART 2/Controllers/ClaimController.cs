@@ -129,6 +129,21 @@ namespace PROG6212_ST10449143_POE_PART_1.Controllers
         {
             try
             {
+                // Automatically move submitted claims to Under Review when viewing approvals
+                var submittedClaims = await _context.Claims
+                    .Where(c => c.Status == "Submitted")
+                    .ToListAsync();
+
+                foreach (var claim in submittedClaims)
+                {
+                    claim.Status = "Under Review";
+                }
+
+                if (submittedClaims.Any())
+                {
+                    await _context.SaveChangesAsync();
+                }
+
                 var pendingClaims = await _claimService.GetPendingClaimsAsync();
                 return View(pendingClaims);
             }
@@ -157,7 +172,7 @@ namespace PROG6212_ST10449143_POE_PART_1.Controllers
 
                 Console.WriteLine($"Found claim: {claim.LecturerName}, Current status: {claim.Status}");
 
-                // Use the service to update the status
+                // Use the service to update the status to Approved
                 await _claimService.UpdateClaimStatusAsync(id, "Approved");
 
                 Console.WriteLine($"Claim {id} approved successfully");

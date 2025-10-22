@@ -11,8 +11,6 @@
         </h2>
         <div class="btn-group">
             <button class="btn btn-outline-primary active" onclick="filterClaims('all')">All Claims</button>
-            <button class="btn btn-outline-warning" onclick="filterClaims('under review')">Under Review</button>
-            <button class="btn btn-outline-secondary" onclick="filterClaims('submitted')">Submitted</button>
         </div>
     </div>
 
@@ -35,7 +33,7 @@
     @if (!Model.Any())
     {
         <div class="alert alert-info text-center">
-            <i class="fas fa-info-circle me-2"></i>No pending claims for approval.
+            <i class="fas fa-info-circle me-2"></i>No claims under review for approval.
         </div>
     }
     else
@@ -45,9 +43,9 @@
             {
                 <div class="col-md-6 mb-4 claim-card" data-status="@claim.Status.ToLower()">
                     <div class="card h-100 border-0 shadow-sm">
-                        <div class="card-header @GetHeaderClass(claim.Status) text-dark d-flex justify-content-between align-items-center">
+                        <div class="card-header bg-warning text-dark d-flex justify-content-between align-items-center">
                             <h6 class="mb-0">Claim #@claim.Id</h6>
-                            <span class="badge @GetStatusBadgeClass(claim.Status)">@claim.Status</span>
+                            <span class="badge bg-warning">Under Review</span>
                         </div>
                         <div class="card-body">
                             <div class="row mb-2">
@@ -106,7 +104,6 @@
                         <div class="card-footer bg-light">
                             <div class="row g-2">
                                 <div class="col-md-6">
-                                    <!-- FIXED: Simplified Approve form without role parameter -->
                                     <form asp-action="Approve" method="post" class="d-inline">
                                         <input type="hidden" name="id" value="@claim.Id" />
                                         <button type="submit" class="btn btn-success w-100"
@@ -134,7 +131,6 @@
                                 <h5 class="modal-title">Reject Claim #@claim.Id</h5>
                                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                             </div>
-                            <!-- FIXED: Simplified Reject form without role parameter -->
                             <form asp-action="Reject" method="post">
                                 <input type="hidden" name="id" value="@claim.Id" />
                                 <div class="modal-body">
@@ -162,46 +158,13 @@
         function filterClaims(status) {
             const claims = document.querySelectorAll('.claim-card');
             claims.forEach(claim => {
-                if (status === 'all') {
-                    claim.style.display = 'block';
-                } else if (status === 'submitted' && claim.dataset.status === 'submitted') {
-                    claim.style.display = 'block';
-                } else if (status === 'under review' && claim.dataset.status.includes('under review')) {
-                    claim.style.display = 'block';
-                } else {
-                    claim.style.display = 'none';
-                }
+                claim.style.display = 'block';
             });
 
-            // Update active button state
             document.querySelectorAll('.btn-group .btn').forEach(btn => {
                 btn.classList.remove('active');
             });
             event.target.classList.add('active');
         }
     </script>
-}
-
-@functions {
-    private string GetStatusBadgeClass(string status)
-    {
-        return status switch
-        {
-            "Submitted" => "bg-secondary",
-            "Under Review" => "bg-warning",
-            "Approved" => "bg-success",
-            "Rejected" => "bg-danger",
-            _ => "bg-secondary"
-        };
-    }
-
-    private string GetHeaderClass(string status)
-    {
-        return status switch
-        {
-            "Submitted" => "bg-light",
-            "Under Review" => "bg-warning",
-            _ => "bg-light"
-        };
-    }
 }
