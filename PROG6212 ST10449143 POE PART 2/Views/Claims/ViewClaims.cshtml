@@ -9,6 +9,22 @@
         <i class="fas fa-list-alt me-2"></i>All Submitted Claims
     </h2>
 
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="fas fa-check-circle me-2"></i>@TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="fas fa-exclamation-circle me-2"></i>@TempData["ErrorMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
     @if (!Model.Any())
     {
         <div class="alert alert-info text-center">
@@ -32,6 +48,7 @@
                                 <th>Status</th>
                                 <th>Submitted Date</th>
                                 <th>Document</th>
+                                <th>Actions</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -62,6 +79,15 @@
                                             <span class="text-muted">None</span>
                                         }
                                     </td>
+                                    <td>
+                                        <form asp-action="Delete" method="post" class="d-inline">
+                                            <input type="hidden" name="id" value="@claim.Id" />
+                                            <button type="submit" class="btn btn-sm btn-outline-danger"
+                                                    onclick="return confirm('Are you sure you want to delete claim #@claim.Id? This action cannot be undone.')">
+                                                <i class="fas fa-trash"></i> Delete
+                                            </button>
+                                        </form>
+                                    </td>
                                 </tr>
                             }
                         </tbody>
@@ -77,9 +103,9 @@
     {
         return status switch
         {
-            "Pending" => "bg-warning",
-            "ApprovedByCoordinator" => "bg-info",
-            "ApprovedByManager" => "bg-success",
+            "Submitted" => "bg-secondary",
+            "Under Review" => "bg-warning",
+            "Approved" => "bg-success",
             "Rejected" => "bg-danger",
             _ => "bg-secondary"
         };

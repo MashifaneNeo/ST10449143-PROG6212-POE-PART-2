@@ -17,6 +17,14 @@
         </div>
     }
 
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="fas fa-exclamation-circle me-2"></i>@TempData["ErrorMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
     @if (!Model.Any())
     {
         <div class="alert alert-info text-center">
@@ -126,6 +134,12 @@
                                 </div>
                             }
 
+                            @if (claim.Status == "Approved")
+                            {
+                                <div class="alert alert-success mt-3 mb-0">
+                                    <strong><i class="fas fa-check-circle me-1"></i>Claim Approved:</strong> This claim has been fully approved and processed.
+                                </div>
+                            }
                         </div>
                     </div>
                 </div>

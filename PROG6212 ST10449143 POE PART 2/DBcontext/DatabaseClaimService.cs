@@ -12,7 +12,7 @@ namespace PROG6212_ST10449143_POE_PART_1.Services
             _context = context;
         }
 
-        public async void AddClaim(Claim claim)
+        public async Task AddClaimAsync(Claim claim)
         {
             try
             {
@@ -29,13 +29,13 @@ namespace PROG6212_ST10449143_POE_PART_1.Services
             }
         }
 
-        public List<Claim> GetAllClaims()
+        public async Task<List<Claim>> GetAllClaimsAsync()
         {
             try
             {
-                return _context.Claims
+                return await _context.Claims
                     .OrderByDescending(c => c.SubmittedDate)
-                    .ToList();
+                    .ToListAsync();
             }
             catch (Exception ex)
             {
@@ -44,11 +44,11 @@ namespace PROG6212_ST10449143_POE_PART_1.Services
             }
         }
 
-        public Claim GetClaimById(int id)
+        public async Task<Claim> GetClaimByIdAsync(int id)
         {
             try
             {
-                return _context.Claims.FirstOrDefault(c => c.Id == id);
+                return await _context.Claims.FirstOrDefaultAsync(c => c.Id == id);
             }
             catch (Exception ex)
             {
@@ -57,17 +57,37 @@ namespace PROG6212_ST10449143_POE_PART_1.Services
             }
         }
 
-        public void UpdateClaimStatus(int id, string status, string rejectionReason = null)
+        public async Task UpdateClaimStatusAsync(int id, string status, string rejectionReason = null)
         {
             try
             {
-                var claim = _context.Claims.FirstOrDefault(c => c.Id == id);
+                var claim = await _context.Claims.FirstOrDefaultAsync(c => c.Id == id);
                 if (claim != null)
                 {
                     claim.Status = status;
-                    claim.RejectionReason = rejectionReason;
-                    _context.SaveChanges();
+                    claim.RejectionReason = rejectionReason ?? string.Empty; // Ensure not null
+
+                    // If approving, you might want to set additional properties
+                    if (status == "Approved")
+                    {
+                        // Add any approval-specific logic here
+                        Console.WriteLine($"Claim {id} approved at {DateTime.Now}");
+                    }
+
+                    await _context.SaveChangesAsync();
+                    Console.WriteLine($"Claim {id} status updated to {status}");
                 }
+                else
+                {
+                    Console.WriteLine($"Claim {id} not found");
+                    throw new ArgumentException($"Claim with ID {id} not found");
+                }
+            }
+            catch (DbUpdateException dbEx)
+            {
+                Console.WriteLine($"Database error updating claim {id}: {dbEx.Message}");
+                Console.WriteLine($"Inner exception: {dbEx.InnerException?.Message}");
+                throw;
             }
             catch (Exception ex)
             {
@@ -76,14 +96,14 @@ namespace PROG6212_ST10449143_POE_PART_1.Services
             }
         }
 
-        public List<Claim> GetPendingClaims()
+        public async Task<List<Claim>> GetPendingClaimsAsync()
         {
             try
             {
-                return _context.Claims
+                return await _context.Claims
                     .Where(c => c.Status == "Submitted" || c.Status == "Under Review")
                     .OrderByDescending(c => c.SubmittedDate)
-                    .ToList();
+                    .ToListAsync();
             }
             catch (Exception ex)
             {
@@ -92,15 +112,15 @@ namespace PROG6212_ST10449143_POE_PART_1.Services
             }
         }
 
-        public bool DeleteClaim(int id)
+        public async Task<bool> DeleteClaimAsync(int id)
         {
             try
             {
-                var claim = _context.Claims.FirstOrDefault(c => c.Id == id);
+                var claim = await _context.Claims.FirstOrDefaultAsync(c => c.Id == id);
                 if (claim != null)
                 {
                     _context.Claims.Remove(claim);
-                    _context.SaveChanges();
+                    await _context.SaveChangesAsync();
                     return true;
                 }
                 return false;

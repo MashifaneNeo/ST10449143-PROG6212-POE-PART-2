@@ -1,18 +1,21 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using PROG6212_ST10449143_POE_PART_1.Models;
 using PROG6212_ST10449143_POE_PART_1.Services;
 
-namespace PROG_UI_MVC.Controllers
+namespace PROG6212_ST10449143_POE_PART_1.Controllers
 {
     public class ClaimsController : Controller
     {
         private readonly IClaimService _claimService;
         private readonly IWebHostEnvironment _environment;
+        private readonly AppDbContext _context;
 
-        public ClaimsController(IClaimService claimService, IWebHostEnvironment environment)
+        public ClaimsController(IClaimService claimService, IWebHostEnvironment environment, AppDbContext context)
         {
             _claimService = claimService;
             _environment = environment;
+            _context = context;
         }
 
         public IActionResult Submit()
@@ -25,6 +28,8 @@ namespace PROG_UI_MVC.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Submit(ClaimViewModel model, IFormFile supportingDocument)
         {
+            ModelState.Remove("AdditionalNotes");
+
             if (ModelState.IsValid)
             {
                 string fileName = null;
@@ -85,12 +90,12 @@ namespace PROG_UI_MVC.Controllers
                         Month = model.Month,
                         HoursWorked = model.HoursWorked,
                         HourlyRate = model.HourlyRate,
-                        AdditionalNotes = model.AdditionalNotes,
+                        AdditionalNotes = model.AdditionalNotes ?? string.Empty,
                         SupportingDocument = fileName,
-                        Status = "Submitted" 
+                        Status = "Submitted"
                     };
 
-                    _claimService.AddClaim(claim);
+                    await _claimService.AddClaimAsync(claim);
                     TempData["SuccessMessage"] = "Claim submitted successfully!";
                     return RedirectToAction("Submit");
                 }
@@ -105,49 +110,111 @@ namespace PROG_UI_MVC.Controllers
             return View(model);
         }
 
-        public IActionResult ViewClaims()
-        {
-            var claims = _claimService.GetAllClaims();
-            return View(claims);
-        }
-
-        public IActionResult Approvals()
-        {
-            var pendingClaims = _claimService.GetPendingClaims();
-            foreach (var claim in pendingClaims.Where(c => c.Status == "Submitted"))
-            {
-                _claimService.UpdateClaimStatus(claim.Id, "Under Review");
-            }
-
-            var updatedClaims = _claimService.GetPendingClaims();
-            return View(updatedClaims);
-        }
-
-        [HttpPost]
-        public IActionResult Approve(int id, string role)
-        {
-            var status = "Approved"; 
-            _claimService.UpdateClaimStatus(id, status);
-
-            TempData["ApprovalMessage"] = "Claim approved successfully!";
-            return RedirectToAction("Approvals");
-        }
-
-        [HttpPost]
-        public IActionResult Reject(int id, string rejectionReason, string role)
-        {
-            _claimService.UpdateClaimStatus(id, "Rejected", rejectionReason);
-
-            TempData["ApprovalMessage"] = "Claim rejected successfully!";
-            return RedirectToAction("Approvals");
-        }
-
-        [HttpPost]
-        public IActionResult Delete(int id)
+        public async Task<IActionResult> ViewClaims()
         {
             try
             {
-                var result = _claimService.DeleteClaim(id);
+                var claims = await _claimService.GetAllClaimsAsync();
+                return View(claims);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error loading claims: {ex.Message}");
+                TempData["ErrorMessage"] = "Error loading claims. Please try again.";
+                return View(new List<Claim>());
+            }
+        }
+
+        public async Task<IActionResult> Approvals()
+        {
+            try
+            {
+                var pendingClaims = await _claimService.GetPendingClaimsAsync();
+                return View(pendingClaims);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error loading approvals: {ex.Message}");
+                TempData["ErrorMessage"] = "Error loading claims for approval. Please try again.";
+                return View(new List<Claim>());
+            }
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> Approve(int id)
+        {
+            try
+            {
+                Console.WriteLine($"=== APPROVE ACTION CALLED for claim {id} ===");
+
+                // Verify claim exists first
+                var claim = await _claimService.GetClaimByIdAsync(id);
+                if (claim == null)
+                {
+                    TempData["ErrorMessage"] = $"Claim with ID {id} not found.";
+                    return RedirectToAction("Approvals");
+                }
+
+                Console.WriteLine($"Found claim: {claim.LecturerName}, Current status: {claim.Status}");
+
+                // Use the service to update the status
+                await _claimService.UpdateClaimStatusAsync(id, "Approved");
+
+                Console.WriteLine($"Claim {id} approved successfully");
+                TempData["ApprovalMessage"] = "Claim approved successfully!";
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error approving claim {id}: {ex.Message}");
+                Console.WriteLine($"Stack trace: {ex.StackTrace}");
+                TempData["ErrorMessage"] = $"Error approving claim: {ex.Message}";
+            }
+
+            return RedirectToAction("Approvals");
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> Reject(int id, string rejectionReason)
+        {
+            try
+            {
+                Console.WriteLine($"=== REJECT ACTION CALLED for claim {id} ===");
+
+                // Verify claim exists first
+                var claim = await _claimService.GetClaimByIdAsync(id);
+                if (claim == null)
+                {
+                    TempData["ErrorMessage"] = $"Claim with ID {id} not found.";
+                    return RedirectToAction("Approvals");
+                }
+
+                if (string.IsNullOrEmpty(rejectionReason))
+                {
+                    TempData["ErrorMessage"] = "Rejection reason is required.";
+                    return RedirectToAction("Approvals");
+                }
+
+                await _claimService.UpdateClaimStatusAsync(id, "Rejected", rejectionReason);
+
+                Console.WriteLine($"Claim {id} rejected successfully");
+                TempData["ApprovalMessage"] = "Claim rejected successfully!";
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error rejecting claim {id}: {ex.Message}");
+                Console.WriteLine($"Stack trace: {ex.StackTrace}");
+                TempData["ErrorMessage"] = $"Error rejecting claim: {ex.Message}";
+            }
+
+            return RedirectToAction("Approvals");
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> Delete(int id)
+        {
+            try
+            {
+                var result = await _claimService.DeleteClaimAsync(id);
                 if (result)
                 {
                     TempData["SuccessMessage"] = "Claim deleted successfully!";
@@ -162,14 +229,23 @@ namespace PROG_UI_MVC.Controllers
                 TempData["ErrorMessage"] = "An error occurred while deleting the claim.";
                 Console.WriteLine($"Delete error: {ex.Message}");
             }
-            
+
             return RedirectToAction("ViewClaims");
         }
 
-        public IActionResult TrackStatus()
+        public async Task<IActionResult> TrackStatus()
         {
-            var claims = _claimService.GetAllClaims();
-            return View(claims);
+            try
+            {
+                var claims = await _claimService.GetAllClaimsAsync();
+                return View(claims);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error loading track status: {ex.Message}");
+                TempData["ErrorMessage"] = "Error loading claim status. Please try again.";
+                return View(new List<Claim>());
+            }
         }
     }
 }
